@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Document</title>
+  <style type="text/css">
+    .grid {
+      margin: auto;
+      width: 500px;
+      text-align: center;
+    }
+
+    .grid table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .grid th,
+    td {
+      padding: 10;
+      border: 1px dashed orange;
+      height: 35px;
+      line-height: 35px;
+    }
+
+    .grid th {
+      background-color: orange;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="app">
+    <div class="grid">
+
+      <thead>
+        <label for="id">增加：<input type="text" id="id" v-model.lazy='id' :disabled='flag'></label>
+        <label for="name">名称：<input type="text" id="name" v-model.lazy='name' v-focus></label>
+        <button @click='add()'>提交</button>
+        <tr>
+          <th>编号</th>
+          <th>名称</th>
+          <th>时间</th>
+          <th>操作</th>
+        </tr>
+        <span>图书总数：</span>
+        <!-- 3.2 在页面上 展示出来 -->
+        <span>{{total}}</span>
+      </thead>
+
+      <table>
+        <tbody>
+          <tr :key='itme.id' v-for='(itme,index) in books'>
+            <td>{{itme.id}}</td>
+            <td>{{itme.name}}</td>
+            <td>{{itme.date | format('yyyy-MM-dd hh:mm:ss')}}</td>
+            <td>
+              <a href="" @click.prevent='alter(index)'>修改</a>
+              <span>|</span>
+              <a href="" @click.prevent='del(index)'>删除</a>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <script type="text/javascript" src="js/vue.js"></script>
+  <script type="text/javascript">
+    // 光标自动获取事件
+    Vue.directive('focus', {
+      inserted: function (el) {
+        el.focus();
+      }
+    })
+    // Vue.filter  定义一个全局过滤器
+    Vue.filter('format', function (value, arg) {
+      function dateFormat(date, format) {
+        if (typeof date === "string") {
+          var mts = date.match(/(\/Date\((\d+)\)\/)/);
+          if (mts && mts.length >= 3) {
+            date = parseInt(mts[2]);
+          }
+        }
+        date = new Date(date);
+        if (!date || date.toUTCString() == "Invalid Date") {
+          return "";
+        }
+        var map = {
+          "M": date.getMonth() + 1, //月份 
+          "d": date.getDate(), //日 
+          "h": date.getHours(), //小时 
+          "m": date.getMinutes(), //分 
+          "s": date.getSeconds(), //秒 
+          "q": Math.floor((date.getMonth() + 3) / 3), //季度 
+          "S": date.getMilliseconds() //毫秒 
+        };
+        format = format.replace(/([yMdhmsqS])+/g, function (all, t) {
+          var v = map[t];
+          if (v !== undefined) {
+            if (all.length > 1) {
+              v = '0' + v;
+              v = v.substr(v.length - 2);
+            }
+            return v;
+          } else if (t === 'y') {
+            return (date.getFullYear() + '').substr(4 - all.length);
+          }
+          return all;
+        });
+        return format;
+      }
+      return dateFormat(value, arg);
+    })
+    /*
+      图书管理-图书列表展示功能
+      注意事项：<a href="" @click.prevent>修改</a>
+      事件绑定时，可以只添加修饰符，而不绑定事件函数
+    */
+    var date = new Date();
+    var vm = new Vue({
+      el: '#app',
+      data: {
+        flag: false,
+        id: '',
+        name: '',
+        books: [],
+        date: date,
+        books: [{
+          id: 1,
+          name: '三国演义',
+          date: 2525609975000
+        }, {
+          id: 2,
+          name: '水浒传',
+          date: 2525609975000
+        }, {
+          id: 3,
+          name: '红楼梦',
+          date: 2525609975000
+        }, {
+          id: 4,
+          name: '西游记',
+          date: 2525609975000
+        }]
+      },
+      methods: {
+        add() {
+          if (this.flag) {
+            this.books.some((item) => {
+              if (item.id == this.id) {
+                item.name = this.name;
+                // 完成更新操作之后，需要终止循环
+                return true;
+              }
+
+            });
+            this.flag = false;
+          } else {
+            // 新增方法
+            var itme = {};
+            itme.id = this.id;
+            itme.name = this.name;
+            itme.date = this.date;
+            this.books.push(itme);
+            this.id = ""
+            this.name = "";
+          }
+        },
+        // 修改方法
+        alter(index) {
+          this.flag = true;
+          var item = this.books[index];
+          this.id = item.id;
+          this.name = item.name;
+        },
+
+        // 删除方法
+        del(index) {
+          this.books.pop(index);
+        }
+      },
+      // 书本总量事件
+      computed: {
+        total: function () {
+          // 3.1  计算图书的总数
+          return this.books.length;
+        }
+      },
+    });
+  </script>
+</body>
+
+</html>
